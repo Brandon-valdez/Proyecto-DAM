@@ -1,5 +1,6 @@
 package sv.edu.itca.proyecto_dam;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -204,6 +206,7 @@ public class principal extends AppCompatActivity {
         TextView tvNombre = cardView.findViewById(R.id.tvNombre);
         TextView tvHabilidades = cardView.findViewById(R.id.tvHabilidades);
         MaterialButton btnVerPerfil = cardView.findViewById(R.id.btnVerPerfil);
+        MaterialButton btnContactar = cardView.findViewById(R.id.btnContactar);
 
         // Configurar datos del usuario
         String nombre = usuario.optString("nombre", "");
@@ -235,7 +238,62 @@ public class principal extends AppCompatActivity {
             startActivity(intent);
         });
 
+        // Configurar botón Contactar
+        btnContactar.setOnClickListener(v -> {
+            showContactDialog(usuario);
+        });
+
         return cardView;
+    }
+
+    private void showContactDialog(JSONObject usuario) {
+        try {
+            String nombre = usuario.optString("nombre", "");
+            String apellido = usuario.optString("apellido", "");
+            String email = usuario.optString("email", "No disponible");
+            String telefono = usuario.optString("telefono", "No disponible");
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            View dialogView = getLayoutInflater().inflate(R.layout.dialog_contact_info, null);
+            builder.setView(dialogView);
+
+            TextView tvDialogNombre = dialogView.findViewById(R.id.tvDialogNombre);
+            TextView tvDialogEmail = dialogView.findViewById(R.id.tvDialogEmail);
+            TextView tvDialogTelefono = dialogView.findViewById(R.id.tvDialogTelefono);
+            MaterialButton btnCopyEmail = dialogView.findViewById(R.id.btnCopyEmail);
+            MaterialButton btnCopyTelefono = dialogView.findViewById(R.id.btnCopyTelefono);
+            MaterialButton btnCerrar = dialogView.findViewById(R.id.btnCerrar);
+
+            tvDialogNombre.setText(nombre + " " + apellido);
+            tvDialogEmail.setText(email);
+            tvDialogTelefono.setText(telefono);
+
+            AlertDialog dialog = builder.create();
+
+            // Copiar email
+            btnCopyEmail.setOnClickListener(v -> {
+                android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                android.content.ClipData clip = android.content.ClipData.newPlainText("email", email);
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(this, "Email copiado al portapapeles", Toast.LENGTH_SHORT).show();
+            });
+
+            // Copiar teléfono
+            btnCopyTelefono.setOnClickListener(v -> {
+                android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                android.content.ClipData clip = android.content.ClipData.newPlainText("telefono", telefono);
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(this, "Teléfono copiado al portapapeles", Toast.LENGTH_SHORT).show();
+            });
+
+            // Cerrar diálogo
+            btnCerrar.setOnClickListener(v -> dialog.dismiss());
+
+            dialog.show();
+        } catch (Exception e) {
+            Log.e(TAG, "Error showing contact dialog: " + e.getMessage());
+            Toast.makeText(this, "Error al mostrar información de contacto", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void loadUserSkills(int userId, TextView tvHabilidades) {
